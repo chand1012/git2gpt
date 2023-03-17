@@ -1,6 +1,6 @@
 # git2gpt
 
-git2gpt is a command-line utility that converts a Git repository to a text file. The output text file represents the Git repository in a structured format. Each file in the repository is represented by a section that starts with a line containing four hyphens (----), followed by a line with the file's path and name, and then the file's content. The text file ends with a line containing the symbols --END--.
+git2gpt is a command-line utility that converts a Git repository to a text file. The output text file represents the Git repository in a structured format. Each file in the repository is represented by a section that starts with a line containing four hyphens (----), followed by a line with the file's path and name, and then the file's content. The text file ends with a line containing the symbols --END--. You can also add a `.gptignore` file to your repos to have git2gpt ignore certain files.
 
 ## Installation
 
@@ -24,8 +24,9 @@ git2gpt [flags] /path/to/git/repository
 
 ### Flags
 
-* `-p`,    `--preamble`: Path to a text file containing a preamble to include at the beginning of the output file.
-* `-o`,    `--output`: Path to the output file. If not specified, will print to standard output.
+* `-p`,        `--preamble`: Path to a text file containing a preamble to include at the beginning of the output file.
+* `-o`,        `--output`: Path to the output file. If not specified, will print to standard output.
+* `-e`,     `--estimate`: Estimate the tokens of the output file. If not specified, does not estimate.
 
 ## Contributing
 
