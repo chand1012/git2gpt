@@ -22,11 +22,15 @@ To use the git2gpt utility, run the following command:
 git2gpt [flags] /path/to/git/repository
 ```
 
+### Ignoring Files
+
+By default, your `.git` directory and your `.gitignore` and `LICENSE` files are ignored. If you want to change this behavior, you should add a `.gptignore` file to your repository. The `.gptignore` file should contain a list of files and directories to ignore, one per line. The `.gptignore` file should be in the same directory as your `.gitignore` file. Please note that this overwrites the default ignore list, so you should include the default ignore list in your `.gptignore` file if you want to keep it.
+
 ### Flags
 
-* `-p`,        `--preamble`: Path to a text file containing a preamble to include at the beginning of the output file.
-* `-o`,        `--output`: Path to the output file. If not specified, will print to standard output.
-* `-e`,     `--estimate`: Estimate the tokens of the output file. If not specified, does not estimate.
+* `-p`,          `--preamble`: Path to a text file containing a preamble to include at the beginning of the output file.
+* `-o`,          `--output`: Path to the output file. If not specified, will print to standard output.
+* `-e`,       `--estimate`: Estimate the tokens of the output file. If not specified, does not estimate.
 
 ## Contributing
 
