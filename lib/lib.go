@@ -38,12 +38,20 @@ func shouldIgnore(filePath string, ignoreList []string) bool {
 
 func ProcessGitRepo(repoPath, preambleFile string) (string, error) {
 	ignoreFilePath := filepath.Join(repoPath, ".gptignore")
+	gitignoreFilePath := filepath.Join(repoPath, ".gitignore")
 
 	var ignoreList []string
-	ignoreList = append(ignoreList, ".git/*", ".gitignore", "LICENSE")
 	if _, err := os.Stat(ignoreFilePath); err == nil {
 		// .gptignore file exists
 		ignoreList, _ = getIgnoreList(ignoreFilePath)
+	}
+	ignoreList = append(ignoreList, ".git/*", ".gitignore")
+
+	if _, err := os.Stat(gitignoreFilePath); err == nil {
+		// .gitignore file exists
+		// append .gitignore to ignoreList
+		gitignoreList, _ := getIgnoreList(gitignoreFilePath)
+		ignoreList = append(ignoreList, gitignoreList...)
 	}
 
 	var repoBuilder strings.Builder
