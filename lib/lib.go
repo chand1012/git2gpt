@@ -35,6 +35,7 @@ func shouldIgnore(filePath string, ignoreList []string) bool {
 	}
 	return false
 }
+
 func ProcessGitRepo(repoPath, preambleFile string) (string, error) {
 	ignoreFilePath := filepath.Join(repoPath, ".gptignore")
 
