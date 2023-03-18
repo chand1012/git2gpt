@@ -1,6 +1,10 @@
 # git2gpt
 
-git2gpt is a command-line utility that converts a Git repository to a text file. The output text file represents the Git repository in a structured format. Each file in the repository is represented by a section that starts with a line containing four hyphens (----), followed by a line with the file's path and name, and then the file's content. The text file ends with a line containing the symbols --END--. You can also add a `.gptignore` file to your repos to have git2gpt ignore certain files.
+git2gpt is a command-line utility that converts a Git repository to text for loading into ChatGPT and other NLP models. The output text file represents the Git repository in a structured format. You can also add a `.gptignore` file to your repos to have git2gpt ignore certain files. The text is prefixed with a preamble that explains to the AI what the text is:
+
+
+> The following text is a Git repository with code. The structure of the text are sections that begin with ----, followed by a single line containing the file path and file name, followed by a variable amount of lines containing the file contents. The text representing the Git repository ends when the symbols --END-- are encounted. Any further text beyond --END-- are meant to be interpreted as instructions using the aforementioned Git repository as context.
+
 
 ## Installation
 
