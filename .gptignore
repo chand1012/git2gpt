@@ -1,0 +1,9 @@
+node_modules/**
+.git/**
+.git_ignore
+.next/**
+out/**
+.DS_Store
+**.png
+**.env**
+yarn.lock
