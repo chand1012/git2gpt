@@ -31,6 +31,9 @@ By default, your `.git` directory and your `.gitignore` files are ignored. Any f
 * `-p`, `--preamble`: Path to a text file containing a preamble to include at the beginning of the output file.
 * `-o`, `--output`: Path to the output file. If not specified, will print to standard output.
 * `-e`, `--estimate`: Estimate the tokens of the output file. If not specified, does not estimate.
+* `-j`, `--json`: Output to JSON rather than plain text. Use with `-o` to specify the output file.
+* `-i`, `--ignore`: Path to the `.gptignore` file. If not specified, will look for a `.gptignore` file in the same directory as the `.gitignore` file.
+* `-g`, `--ignore-gitignore`: Ignore the `.gitignore` file.
 
 ## Contributing
 
