@@ -57,6 +57,7 @@ func getIgnoreList(ignoreFilePath string) ([]string, error) {
 		}
 		// remove all preceding slashes
 		line = strings.TrimPrefix(line, "/")
+		// line = filepath.FromSlash(line)
 		ignoreList = append(ignoreList, line)
 	}
 	return ignoreList, scanner.Err()
@@ -64,7 +65,7 @@ func getIgnoreList(ignoreFilePath string) ([]string, error) {
 
 func shouldIgnore(filePath string, ignoreList []string) bool {
 	for _, pattern := range ignoreList {
-		g := glob.MustCompile(pattern)
+		g := glob.MustCompile(pattern, '/')
 		if g.Match(filePath) {
 			return true
 		}
@@ -83,7 +84,7 @@ func GenerateIgnoreList(repoPath, ignoreFilePath string, useGitignore bool) []st
 		// .gptignore file exists
 		ignoreList, _ = getIgnoreList(ignoreFilePath)
 	}
-	ignoreList = append(ignoreList, ".git/**", ".gitignore")
+	ignoreList = append(ignoreList, filepath.Join(".git", "**"), ".gitignore")
 
 	if useGitignore {
 		gitignorePath := filepath.Join(repoPath, ".gitignore")
@@ -102,7 +103,7 @@ func GenerateIgnoreList(repoPath, ignoreFilePath string, useGitignore bool) []st
 			// check if the pattern is a directory
 			info, err := os.Stat(filepath.Join(repoPath, pattern))
 			if err == nil && info.IsDir() {
-				pattern = pattern + "/**"
+				pattern = filepath.Join(pattern, "**")
 			}
 			finalIgnoreList = append(finalIgnoreList, pattern)
 		}
@@ -170,7 +171,9 @@ func processRepository(repoPath string, ignoreList []string, repo *GitRepo) erro
 		}
 		if !info.IsDir() {
 			relativeFilePath, _ := filepath.Rel(repoPath, path)
-			if !shouldIgnore(relativeFilePath, ignoreList) {
+			ignore := shouldIgnore(relativeFilePath, ignoreList)
+			fmt.Println(relativeFilePath, ignore)
+			if !ignore {
 				contents, err := os.ReadFile(path)
 				// if the file is not valid UTF-8, skip it
 				if !utf8.Valid(contents) {

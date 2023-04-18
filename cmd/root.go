@@ -15,6 +15,7 @@ var estimateTokens bool
 var ignoreFilePath string
 var ignoreGitignore bool
 var outputJSON bool
+var debug bool
 
 var rootCmd = &cobra.Command{
 	Use:   "git2gpt [flags] /path/to/git/repository",
@@ -46,7 +47,9 @@ var rootCmd = &cobra.Command{
 					os.Exit(1)
 				}
 			} else {
-				fmt.Println(string(output))
+				if !debug {
+					fmt.Println(string(output))
+				}
 			}
 			return
 		}
@@ -67,7 +70,9 @@ var rootCmd = &cobra.Command{
 				os.Exit(1)
 			}
 		} else {
-			fmt.Println(output)
+			if !debug {
+				fmt.Println(output)
+			}
 		}
 		if estimateTokens {
 			fmt.Printf("Estimated number of tokens: %d\n", prompt.EstimateTokens(output))
@@ -87,6 +92,8 @@ func init() {
 	rootCmd.Flags().BoolVarP(&ignoreGitignore, "ignore-gitignore", "g", false, "ignore .gitignore file")
 	// output JSON. Should be a bool
 	rootCmd.Flags().BoolVarP(&outputJSON, "json", "j", false, "output JSON")
+	// debug. Should be a bool
+	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "debug mode. Do not output to standard output")
 }
 
 func Execute() {
