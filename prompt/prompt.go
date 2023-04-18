@@ -63,10 +63,15 @@ func getIgnoreList(ignoreFilePath string) ([]string, error) {
 	return ignoreList, scanner.Err()
 }
 
+func windowsToUnixPath(windowsPath string) string {
+	unixPath := strings.ReplaceAll(windowsPath, "\\", "/")
+	return unixPath
+}
+
 func shouldIgnore(filePath string, ignoreList []string) bool {
 	for _, pattern := range ignoreList {
 		g := glob.MustCompile(pattern, '/')
-		if g.Match(filePath) {
+		if g.Match(windowsToUnixPath(filePath)) {
 			return true
 		}
 	}
@@ -84,7 +89,7 @@ func GenerateIgnoreList(repoPath, ignoreFilePath string, useGitignore bool) []st
 		// .gptignore file exists
 		ignoreList, _ = getIgnoreList(ignoreFilePath)
 	}
-	ignoreList = append(ignoreList, filepath.Join(".git", "**"), ".gitignore")
+	ignoreList = append(ignoreList, ".git/**", ".gitignore")
 
 	if useGitignore {
 		gitignorePath := filepath.Join(repoPath, ".gitignore")
