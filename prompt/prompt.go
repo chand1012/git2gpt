@@ -177,7 +177,7 @@ func processRepository(repoPath string, ignoreList []string, repo *GitRepo) erro
 		if !info.IsDir() {
 			relativeFilePath, _ := filepath.Rel(repoPath, path)
 			ignore := shouldIgnore(relativeFilePath, ignoreList)
-			fmt.Println(relativeFilePath, ignore)
+			// fmt.Println(relativeFilePath, ignore)
 			if !ignore {
 				contents, err := os.ReadFile(path)
 				// if the file is not valid UTF-8, skip it
