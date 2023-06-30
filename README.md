@@ -13,7 +13,7 @@ First, make sure you have the Go programming language installed on your system. 
 To install the `git2gpt` utility, run the following command:
 
 ```bash
-go install github.com/chand1012/git2gpt
+go install github.com/chand1012/git2gpt@latest
 ```
 
 This command will download and install the git2gpt binary to your `$GOPATH/bin` directory. Make sure your `$GOPATH/bin` is included in your `$PATH` to use the `git2gpt` command.
