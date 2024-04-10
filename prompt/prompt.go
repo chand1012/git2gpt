@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/chand1012/git2gpt/utils"
 	"github.com/gobwas/glob"
 )
 
@@ -89,7 +90,7 @@ func GenerateIgnoreList(repoPath, ignoreFilePath string, useGitignore bool) []st
 		// .gptignore file exists
 		ignoreList, _ = getIgnoreList(ignoreFilePath)
 	}
-	ignoreList = append(ignoreList, ".git/**", ".gitignore")
+	ignoreList = append(ignoreList, ".git/**", ".gitignore", ".gptignore")
 
 	if useGitignore {
 		gitignorePath := filepath.Join(repoPath, ".gitignore")
@@ -131,7 +132,7 @@ func ProcessGitRepo(repoPath string, ignoreList []string) (*GitRepo, error) {
 }
 
 // OutputGitRepo outputs a Git repository to a text file
-func OutputGitRepo(repo *GitRepo, preambleFile string) (string, error) {
+func OutputGitRepo(repo *GitRepo, preambleFile string, scrubComments bool) (string, error) {
 	var repoBuilder strings.Builder
 
 	if preambleFile != "" {
@@ -148,6 +149,9 @@ func OutputGitRepo(repo *GitRepo, preambleFile string) (string, error) {
 	for _, file := range repo.Files {
 		repoBuilder.WriteString("----\n")
 		repoBuilder.WriteString(fmt.Sprintf("%s\n", file.Path))
+		if scrubComments {
+			file.Contents = utils.RemoveCodeComments(file.Contents)
+		}
 		repoBuilder.WriteString(fmt.Sprintf("%s\n", file.Contents))
 	}
 
@@ -160,9 +164,9 @@ func OutputGitRepo(repo *GitRepo, preambleFile string) (string, error) {
 	return output, nil
 }
 
-func MarshalRepo(repo *GitRepo) ([]byte, error) {
+func MarshalRepo(repo *GitRepo, scrubComments bool) ([]byte, error) {
 	// run the output function to get the total tokens
-	_, err := OutputGitRepo(repo, "")
+	_, err := OutputGitRepo(repo, "", scrubComments)
 	if err != nil {
 		return nil, fmt.Errorf("error marshalling repo: %w", err)
 	}
