@@ -16,6 +16,7 @@ var ignoreFilePath string
 var ignoreGitignore bool
 var outputJSON bool
 var debug bool
+var scrubComments bool
 
 var rootCmd = &cobra.Command{
 	Use:   "git2gpt [flags] /path/to/git/repository",
@@ -30,7 +31,7 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		if outputJSON {
-			output, err := prompt.MarshalRepo(repo)
+			output, err := prompt.MarshalRepo(repo, scrubComments)
 			if err != nil {
 				fmt.Printf("Error: %s\n", err)
 				os.Exit(1)
@@ -53,7 +54,7 @@ var rootCmd = &cobra.Command{
 			}
 			return
 		}
-		output, err := prompt.OutputGitRepo(repo, preambleFile)
+		output, err := prompt.OutputGitRepo(repo, preambleFile, scrubComments)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
@@ -94,6 +95,8 @@ func init() {
 	rootCmd.Flags().BoolVarP(&outputJSON, "json", "j", false, "output JSON")
 	// debug. Should be a bool
 	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "debug mode. Do not output to standard output")
+	// scrub comments. Should be a bool
+	rootCmd.Flags().BoolVarP(&scrubComments, "scrub-comments", "s", false, "scrub comments from the output. Decreases token count")
 }
 
 func Execute() {

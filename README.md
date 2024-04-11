@@ -2,9 +2,7 @@
 
 git2gpt is a command-line utility that converts a Git repository to text for loading into ChatGPT and other NLP models. The output text file represents the Git repository in a structured format. You can also add a `.gptignore` file to your repos to have git2gpt ignore certain files. The text is prefixed with a preamble that explains to the AI what the text is:
 
-
 > The following text is a Git repository with code. The structure of the text are sections that begin with ----, followed by a single line containing the file path and file name, followed by a variable amount of lines containing the file contents. The text representing the Git repository ends when the symbols --END-- are encounted. Any further text beyond --END-- are meant to be interpreted as instructions using the aforementioned Git repository as context.
-
 
 ## Installation
 
@@ -32,12 +30,13 @@ By default, your `.git` directory and your `.gitignore` files are ignored. Any f
 
 ### Flags
 
-* `-p`, `--preamble`: Path to a text file containing a preamble to include at the beginning of the output file.
-* `-o`, `--output`: Path to the output file. If not specified, will print to standard output.
-* `-e`, `--estimate`: Estimate the tokens of the output file. If not specified, does not estimate.
-* `-j`, `--json`: Output to JSON rather than plain text. Use with `-o` to specify the output file.
-* `-i`, `--ignore`: Path to the `.gptignore` file. If not specified, will look for a `.gptignore` file in the same directory as the `.gitignore` file.
-* `-g`, `--ignore-gitignore`: Ignore the `.gitignore` file.
+* `-p`,  `--preamble`: Path to a text file containing a preamble to include at the beginning of the output file.
+* `-o`,  `--output`: Path to the output file. If not specified, will print to standard output.
+* `-e`,  `--estimate`: Estimate the tokens of the output file. If not specified, does not estimate. 
+* `-j`,  `--json`: Output to JSON rather than plain text. Use with `-o` to specify the output file.
+* `-i`,  `--ignore`: Path to the `.gptignore` file. If not specified, will look for a `.gptignore` file in the same directory as the `.gitignore` file.
+* `-g`,  `--ignore-gitignore`: Ignore the `.gitignore` file.
+* `-s`,  `--scrub-comments`: Remove comments from the output file to save tokens.
 
 ## Contributing
 

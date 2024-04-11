@@ -4,13 +4,14 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"strings"
 	"unicode/utf8"
 
+	"github.com/chand1012/git2gpt/utils"
 	"github.com/gobwas/glob"
+	"github.com/pkoukk/tiktoken-go"
 )
 
 // GitFile is a file in a Git repository
@@ -89,7 +90,7 @@ func GenerateIgnoreList(repoPath, ignoreFilePath string, useGitignore bool) []st
 		// .gptignore file exists
 		ignoreList, _ = getIgnoreList(ignoreFilePath)
 	}
-	ignoreList = append(ignoreList, ".git/**", ".gitignore")
+	ignoreList = append(ignoreList, ".git/**", ".gitignore", ".gptignore")
 
 	if useGitignore {
 		gitignorePath := filepath.Join(repoPath, ".gitignore")
@@ -131,7 +132,7 @@ func ProcessGitRepo(repoPath string, ignoreList []string) (*GitRepo, error) {
 }
 
 // OutputGitRepo outputs a Git repository to a text file
-func OutputGitRepo(repo *GitRepo, preambleFile string) (string, error) {
+func OutputGitRepo(repo *GitRepo, preambleFile string, scrubComments bool) (string, error) {
 	var repoBuilder strings.Builder
 
 	if preambleFile != "" {
@@ -148,6 +149,9 @@ func OutputGitRepo(repo *GitRepo, preambleFile string) (string, error) {
 	for _, file := range repo.Files {
 		repoBuilder.WriteString("----\n")
 		repoBuilder.WriteString(fmt.Sprintf("%s\n", file.Path))
+		if scrubComments {
+			file.Contents = utils.RemoveCodeComments(file.Contents)
+		}
 		repoBuilder.WriteString(fmt.Sprintf("%s\n", file.Contents))
 	}
 
@@ -160,9 +164,9 @@ func OutputGitRepo(repo *GitRepo, preambleFile string) (string, error) {
 	return output, nil
 }
 
-func MarshalRepo(repo *GitRepo) ([]byte, error) {
+func MarshalRepo(repo *GitRepo, scrubComments bool) ([]byte, error) {
 	// run the output function to get the total tokens
-	_, err := OutputGitRepo(repo, "")
+	_, err := OutputGitRepo(repo, "", scrubComments)
 	if err != nil {
 		return nil, fmt.Errorf("error marshalling repo: %w", err)
 	}
@@ -208,9 +212,12 @@ func processRepository(repoPath string, ignoreList []string, repo *GitRepo) erro
 
 // EstimateTokens estimates the number of tokens in a string
 func EstimateTokens(output string) int64 {
-	tokenCount := float64(len(output))
-	// divide by 3.5 to account for the fact that GPT-4 uses (roughly) 3.5 tokens per character
-	tokenCount = tokenCount / 3.5
-	// round up to the nearest integer
-	return int64(math.Ceil(tokenCount))
+	tke, err := tiktoken.GetEncoding("cl100k_base")
+	if err != nil {
+		fmt.Println("Error getting encoding:", err)
+		return 0
+	}
+
+	tokens := tke.Encode(output, nil, nil)
+	return int64(len(tokens))
 }
