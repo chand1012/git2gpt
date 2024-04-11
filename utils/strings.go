@@ -7,21 +7,25 @@ import (
 	"strings"
 )
 
-// https://chat.openai.com/share/c9f3510b-4278-4a1b-b2ab-bf78f60dff46
+// RemoveCodeComments removes single-line and multiline comments from the provided code string.
 func RemoveCodeComments(code string) string {
-	// Compile the regular expression to match various single-line and multi-line comment styles.
-	// This regex will match single-line comments and multi-line comments in C, C++, JavaScript, and HTML.
-	commentRegex := regexp.MustCompile(`^\s*(//|#|--|<!--|%|;|REM\s).*$`)
+	// Regex for single-line comments.
+	singleLineCommentRegex := regexp.MustCompile(`^\s*(//|#|--|<!--|%|;|REM\s).*$`)
 
-	// Use a scanner to process each line of the input string
+	// Regex for multiline comments in C, JavaScript, Go, and HTML.
+	multiLineCommentRegex := regexp.MustCompile(`(?s)/\*.*?\*/|<!--.*?-->`)
+ 
+	// Use a scanner to process each line of the input string.
 	var result strings.Builder
 	scanner := bufio.NewScanner(strings.NewReader(code))
 	for scanner.Scan() {
 		line := scanner.Text()
-		// Remove the comment portion from the line using a regex
-		cleanLine := commentRegex.ReplaceAllString(line, "")
+		// First remove multiline comments as they may span across multiple lines.
+		line = multiLineCommentRegex.ReplaceAllString(line, "")
+		// Then remove any single-line comment parts that remain.
+		cleanLine := singleLineCommentRegex.ReplaceAllString(line, "")
 		if cleanLine != "" {
-			// Write the cleaned line to the result, preserving original line breaks
+			// Write the cleaned line to the result, preserving original line breaks.
 			result.WriteString(cleanLine + "\n")
 		}
 	}
@@ -30,8 +34,8 @@ func RemoveCodeComments(code string) string {
 		fmt.Fprintln(&result, "Error reading input:", err)
 	}
 
-	// Perform an additional global replacement to catch any multi-line comments that might span multiple lines processed by the scanner
-	finalCleanedCode := commentRegex.ReplaceAllString(result.String(), "")
+	// Additional cleanup in case of multiline comments spanning across multiple scanned lines.
+	finalCleanedCode := multiLineCommentRegex.ReplaceAllString(result.String(), "")
 
 	return strings.TrimRight(finalCleanedCode, "\n")
 }

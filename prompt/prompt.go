@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/chand1012/git2gpt/utils"
 	"github.com/gobwas/glob"
+	"github.com/pkoukk/tiktoken-go"
 )
 
 // GitFile is a file in a Git repository
@@ -212,9 +212,12 @@ func processRepository(repoPath string, ignoreList []string, repo *GitRepo) erro
 
 // EstimateTokens estimates the number of tokens in a string
 func EstimateTokens(output string) int64 {
-	tokenCount := float64(len(output))
-	// divide by 3.5 to account for the fact that GPT-4 uses (roughly) 3.5 tokens per character
-	tokenCount = tokenCount / 3.5
-	// round up to the nearest integer
-	return int64(math.Ceil(tokenCount))
+	tke, err := tiktoken.GetEncoding("cl100k_base")
+	if err != nil {
+		fmt.Println("Error getting encoding:", err)
+		return 0
+	}
+
+	tokens := tke.Encode(output, nil, nil)
+	return int64(len(tokens))
 }
