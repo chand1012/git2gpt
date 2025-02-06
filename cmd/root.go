@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/chand1012/git2gpt/prompt"
 	"github.com/spf13/cobra"
@@ -23,9 +24,22 @@ var rootCmd = &cobra.Command{
 	Short: "git2gpt is a utility to convert a Git repository to a text file for input into GPT-4",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		repoPath = args[0]
+		// Resolve the repository path if it's a symlink.
+		repoPathArg := args[0]
+		resolvedRepoPath, err := filepath.EvalSymlinks(repoPathArg)
+		if err != nil {
+			if os.IsNotExist(err) {
+				fmt.Printf("Warning: repository path %s is a symlink to a non-existent target, using original path\n", repoPathArg)
+				resolvedRepoPath = repoPathArg
+			} else {
+				fmt.Printf("Error resolving symlink for repository path: %s\n", err)
+				os.Exit(1)
+			}
+		}
+		repoPath = resolvedRepoPath
+
 		ignoreList := prompt.GenerateIgnoreList(repoPath, ignoreFilePath, !ignoreGitignore)
-		repo, err := prompt.ProcessGitRepo(repoPath, ignoreList)
+		repo, err := prompt.ProcessGitRepo(repoPath, ignoreList, prompt.IgnoreBrokenSymlinks(true))
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
