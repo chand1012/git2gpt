@@ -3,6 +3,7 @@ package prompt
 import (
 	"bufio"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,16 +17,16 @@ import (
 
 // GitFile is a file in a Git repository
 type GitFile struct {
-	Path     string `json:"path"`     // path to the file relative to the repository root
-	Tokens   int64  `json:"tokens"`   // number of tokens in the file
-	Contents string `json:"contents"` // contents of the file
+	Path     string `json:"path" xml:"path"`     // path to the file relative to the repository root
+	Tokens   int64  `json:"tokens" xml:"tokens"`   // number of tokens in the file
+	Contents string `json:"contents" xml:"contents"` // contents of the file
 }
 
 // GitRepo is a Git repository
 type GitRepo struct {
-	TotalTokens int64     `json:"total_tokens"`
-	Files       []GitFile `json:"files"`
-	FileCount   int       `json:"file_count"`
+	TotalTokens int64     `json:"total_tokens" xml:"total_tokens"`
+	Files       []GitFile `json:"files" xml:"files>file"`
+	FileCount   int       `json:"file_count" xml:"file_count"`
 }
 
 // contains checks if a string is in a slice of strings
@@ -162,6 +163,19 @@ func OutputGitRepo(repo *GitRepo, preambleFile string, scrubComments bool) (stri
 	repo.TotalTokens = EstimateTokens(output)
 
 	return output, nil
+}
+
+func OutputGitRepoXML(repo *GitRepo, scrubComments bool) (string, error) {
+	if scrubComments {
+		for i, file := range repo.Files {
+			repo.Files[i].Contents = utils.RemoveCodeComments(file.Contents)
+		}
+	}
+	output, err := xml.MarshalIndent(repo, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("error marshalling repo to XML: %w", err)
+	}
+	return string(output), nil
 }
 
 func MarshalRepo(repo *GitRepo, scrubComments bool) ([]byte, error) {

@@ -34,6 +34,7 @@ By default, your `.git` directory and your `.gitignore` files are ignored. Any f
 * `-o`,  `--output`: Path to the output file. If not specified, will print to standard output.
 * `-e`,  `--estimate`: Estimate the tokens of the output file. If not specified, does not estimate. 
 * `-j`,  `--json`: Output to JSON rather than plain text. Use with `-o` to specify the output file.
+* `-x`,  `--xml`: Output to XML rather than plain text. Use with `-o` to specify the output file.
 * `-i`,  `--ignore`: Path to the `.gptignore` file. If not specified, will look for a `.gptignore` file in the same directory as the `.gitignore` file.
 * `-g`,  `--ignore-gitignore`: Ignore the `.gitignore` file.
 * `-s`,  `--scrub-comments`: Remove comments from the output file to save tokens.
