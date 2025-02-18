@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -166,17 +167,78 @@ func OutputGitRepo(repo *GitRepo, preambleFile string, scrubComments bool) (stri
 }
 
 func OutputGitRepoXML(repo *GitRepo, scrubComments bool) (string, error) {
-	if scrubComments {
-		for i, file := range repo.Files {
-			repo.Files[i].Contents = utils.RemoveCodeComments(file.Contents)
-		}
-	}
-	output, err := xml.MarshalIndent(repo, "", "  ")
-	if err != nil {
-		return "", fmt.Errorf("error marshalling repo to XML: %w", err)
-	}
-	return string(output), nil
+    // Prepare XML content
+    if scrubComments {
+        for i, file := range repo.Files {
+            repo.Files[i].Contents = utils.RemoveCodeComments(file.Contents)
+        }
+    }
+    
+    // Add XML header
+    var result strings.Builder
+    result.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+    
+    // Use custom marshaling with proper CDATA for code contents
+    result.WriteString("<GitRepo>\n")
+    
+    // Skip the tokens for now
+    result.WriteString("  <total_tokens>PLACEHOLDER</total_tokens>\n")
+    result.WriteString(fmt.Sprintf("  <file_count>%d</file_count>\n", repo.FileCount))
+    result.WriteString("  <files>\n")
+    
+    for _, file := range repo.Files {
+        result.WriteString("    <file>\n")
+        result.WriteString(fmt.Sprintf("      <path>%s</path>\n", escapeXML(file.Path)))
+        result.WriteString(fmt.Sprintf("      <tokens>%d</tokens>\n", file.Tokens))
+        result.WriteString("      <contents><![CDATA[")
+        result.WriteString(file.Contents)
+        result.WriteString("]]></contents>\n")
+        result.WriteString("    </file>\n")
+    }
+    
+    result.WriteString("  </files>\n")
+    result.WriteString("</GitRepo>")
+    
+    // Get the output string
+    outputStr := result.String()
+    
+    // Calculate tokens
+    tokenCount := EstimateTokens(outputStr)
+    repo.TotalTokens = tokenCount
+    
+    // Replace the placeholder with the actual token count
+    outputStr = strings.Replace(outputStr, "<total_tokens>PLACEHOLDER</total_tokens>", 
+                               fmt.Sprintf("<total_tokens>%d</total_tokens>", tokenCount), 1)
+    
+    return outputStr, nil
 }
+
+// escapeXML escapes XML special characters in a string
+func escapeXML(s string) string {
+    s = strings.ReplaceAll(s, "&", "&amp;")
+    s = strings.ReplaceAll(s, "<", "&lt;")
+    s = strings.ReplaceAll(s, ">", "&gt;")
+    s = strings.ReplaceAll(s, "\"", "&quot;")
+    s = strings.ReplaceAll(s, "'", "&apos;")
+    return s
+}
+
+// ValidateXML checks if the given XML string is well-formed
+func ValidateXML(xmlString string) error {
+    decoder := xml.NewDecoder(strings.NewReader(xmlString))
+    for {
+        _, err := decoder.Token()
+        if err == io.EOF {
+            break
+        }
+        if err != nil {
+            return fmt.Errorf("XML validation error: %w", err)
+        }
+    }
+    return nil
+}
+
+
 
 func MarshalRepo(repo *GitRepo, scrubComments bool) ([]byte, error) {
 	// run the output function to get the total tokens

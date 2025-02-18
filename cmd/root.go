@@ -61,6 +61,13 @@ var rootCmd = &cobra.Command{
 				fmt.Printf("Error: %s\n", err)
 				os.Exit(1)
 			}
+			
+			// Validate the XML output
+			if err := prompt.ValidateXML(output); err != nil {
+				fmt.Printf("Error: %s\n", err)
+				os.Exit(1)
+			}
+			
 			if outputFile != "" {
 				// if output file exists, throw error
 				if _, err := os.Stat(outputFile); err == nil {
