@@ -15,6 +15,7 @@ var estimateTokens bool
 var ignoreFilePath string
 var ignoreGitignore bool
 var outputJSON bool
+var outputXML bool
 var debug bool
 var scrubComments bool
 
@@ -50,6 +51,37 @@ var rootCmd = &cobra.Command{
 			} else {
 				if !debug {
 					fmt.Println(string(output))
+				}
+			}
+			return
+		}
+		if outputXML {
+			output, err := prompt.OutputGitRepoXML(repo, scrubComments)
+			if err != nil {
+				fmt.Printf("Error: %s\n", err)
+				os.Exit(1)
+			}
+			
+			// Validate the XML output
+			if err := prompt.ValidateXML(output); err != nil {
+				fmt.Printf("Error: %s\n", err)
+				os.Exit(1)
+			}
+			
+			if outputFile != "" {
+				// if output file exists, throw error
+				if _, err := os.Stat(outputFile); err == nil {
+					fmt.Printf("Error: output file %s already exists\n", outputFile)
+					os.Exit(1)
+				}
+				err = os.WriteFile(outputFile, []byte(output), 0644)
+				if err != nil {
+					fmt.Printf("Error: could not write to output file %s\n", outputFile)
+					os.Exit(1)
+				}
+			} else {
+				if !debug {
+					fmt.Println(output)
 				}
 			}
 			return
@@ -93,6 +125,8 @@ func init() {
 	rootCmd.Flags().BoolVarP(&ignoreGitignore, "ignore-gitignore", "g", false, "ignore .gitignore file")
 	// output JSON. Should be a bool
 	rootCmd.Flags().BoolVarP(&outputJSON, "json", "j", false, "output JSON")
+	// output XML. Should be a bool
+	rootCmd.Flags().BoolVarP(&outputXML, "xml", "x", false, "output XML")
 	// debug. Should be a bool
 	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "debug mode. Do not output to standard output")
 	// scrub comments. Should be a bool
