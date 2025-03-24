@@ -21,7 +21,7 @@ var scrubComments bool
 
 var rootCmd = &cobra.Command{
         Use:   "git2gpt [flags] /path/to/git/repository [/path/to/another/repository ...]",
-        Short: "git2gpt is a utility to convert one or more Git repositories to a text file for input into GPT-4",
+        Short: "git2gpt is a utility to convert one or more Git repositories to a text file for input into an LLM",
         Args:  cobra.MinimumNArgs(1),
         Run: func(cmd *cobra.Command, args []string) {
                 // Create a combined repository to hold all files
