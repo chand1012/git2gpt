@@ -214,11 +214,12 @@ func OutputGitRepo(repo *GitRepo, preambleFile string, scrubComments bool) (stri
 	return output, nil
 }
 
+
 func OutputGitRepoXML(repo *GitRepo, scrubComments bool) (string, error) {
 	if scrubComments {
-			for i, file := range repo.Files {
-					repo.Files[i].Contents = utils.RemoveCodeComments(file.Contents)
-			}
+		for i, file := range repo.Files {
+			repo.Files[i].Contents = utils.RemoveCodeComments(file.Contents)
+		}
 	}
 	var result strings.Builder
 	result.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
@@ -229,16 +230,38 @@ func OutputGitRepoXML(repo *GitRepo, scrubComments bool) (string, error) {
 	result.WriteString("    <files>\n")
 	
 	for _, file := range repo.Files {
-			result.WriteString("        <file>\n")
-			result.WriteString(fmt.Sprintf("            <path>%s</path>\n", escapeXML(file.Path)))
-			result.WriteString(fmt.Sprintf("            <tokens>%d</tokens>\n", file.Tokens))
+		result.WriteString("        <file>\n")
+		result.WriteString(fmt.Sprintf("            <path>%s</path>\n", escapeXML(file.Path)))
+		result.WriteString(fmt.Sprintf("            <tokens>%d</tokens>\n", file.Tokens))
+		
+		// Split content around CDATA end marker (]]>) and create multiple CDATA sections
+		contents := file.Contents
+		result.WriteString("            <contents>")
+		
+		for {
+			idx := strings.Index(contents, "]]>")
+			if idx == -1 {
+				// No more CDATA end markers, write remaining content in one CDATA section
+				result.WriteString("<![CDATA[")
+				result.WriteString(contents)
+				result.WriteString("]]>")
+				break
+			}
 			
-			safeContents := strings.ReplaceAll(file.Contents, "]]]]><![CDATA[>", "]]]]]]><![CDATA[><![CDATA[>")
+			// Write content up to the CDATA end marker
+			result.WriteString("<![CDATA[")
+			result.WriteString(contents[:idx+2]) // Include the "]]" part
+			result.WriteString("]]>") // Close this CDATA section
 			
-			result.WriteString("            <contents><![CDATA[")
-			result.WriteString(safeContents)
-			result.WriteString("]]]]><![CDATA[></contents>\n")
-			result.WriteString("        </file>\n")
+			// Start a new CDATA section with the ">" character
+			result.WriteString("<![CDATA[>")
+			
+			// Move past the "]]>" in the original content
+			contents = contents[idx+3:]
+		}
+		
+		result.WriteString("</contents>\n")
+		result.WriteString("        </file>\n")
 	}
 	
 	result.WriteString("    </files>\n")
@@ -250,10 +273,10 @@ func OutputGitRepoXML(repo *GitRepo, scrubComments bool) (string, error) {
 	repo.TotalTokens = tokenCount
 	
 	outputStr = strings.Replace(
-			outputStr, 
-			"<total_tokens>PLACEHOLDER</total_tokens>", 
-			fmt.Sprintf("<total_tokens>%d</total_tokens>", tokenCount), 
-			1,
+		outputStr, 
+		"<total_tokens>PLACEHOLDER</total_tokens>", 
+		fmt.Sprintf("<total_tokens>%d</total_tokens>", tokenCount), 
+		1,
 	)
 	
 	return outputStr, nil
