@@ -167,60 +167,68 @@ func OutputGitRepo(repo *GitRepo, preambleFile string, scrubComments bool) (stri
 }
 
 func OutputGitRepoXML(repo *GitRepo, scrubComments bool) (string, error) {
-    // Prepare XML content
-    if scrubComments {
-        for i, file := range repo.Files {
-            repo.Files[i].Contents = utils.RemoveCodeComments(file.Contents)
-        }
-    }
-    
-    // Add XML header
-    var result strings.Builder
-    result.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-    
-    // Use custom marshaling with proper CDATA for code contents
-    result.WriteString("<GitRepo>\n")
-    
-    // Skip the tokens for now
-    result.WriteString("  <total_tokens>PLACEHOLDER</total_tokens>\n")
-    result.WriteString(fmt.Sprintf("  <file_count>%d</file_count>\n", repo.FileCount))
-    result.WriteString("  <files>\n")
-    
-    for _, file := range repo.Files {
-        result.WriteString("    <file>\n")
-        result.WriteString(fmt.Sprintf("      <path>%s</path>\n", escapeXML(file.Path)))
-        result.WriteString(fmt.Sprintf("      <tokens>%d</tokens>\n", file.Tokens))
-        result.WriteString("      <contents><![CDATA[")
-        result.WriteString(file.Contents)
-        result.WriteString("]]></contents>\n")
-        result.WriteString("    </file>\n")
-    }
-    
-    result.WriteString("  </files>\n")
-    result.WriteString("</GitRepo>")
-    
-    // Get the output string
-    outputStr := result.String()
-    
-    // Calculate tokens
-    tokenCount := EstimateTokens(outputStr)
-    repo.TotalTokens = tokenCount
-    
-    // Replace the placeholder with the actual token count
-    outputStr = strings.Replace(outputStr, "<total_tokens>PLACEHOLDER</total_tokens>", 
-                               fmt.Sprintf("<total_tokens>%d</total_tokens>", tokenCount), 1)
-    
-    return outputStr, nil
+	// Prepare XML content
+	if scrubComments {
+			for i, file := range repo.Files {
+					repo.Files[i].Contents = utils.RemoveCodeComments(file.Contents)
+			}
+	}
+
+	// Add XML header
+	var result strings.Builder
+	result.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+	result.WriteString("<root>\n")
+	
+	// Add token placeholder - will replace later
+	result.WriteString("    <total_tokens>PLACEHOLDER</total_tokens>\n")
+	result.WriteString(fmt.Sprintf("    <file_count>%d</file_count>\n", repo.FileCount))
+	result.WriteString("    <files>\n")
+	
+	for _, file := range repo.Files {
+			result.WriteString("        <file>\n")
+			result.WriteString(fmt.Sprintf("            <path>%s</path>\n", escapeXML(file.Path)))
+			result.WriteString(fmt.Sprintf("            <tokens>%d</tokens>\n", file.Tokens))
+			
+			// Handle file contents within CDATA, but escape any "]]>" sequences
+			// which would prematurely terminate the CDATA section
+			safeContents := strings.ReplaceAll(file.Contents, "]]>", "]]]]><![CDATA[>")
+			
+			result.WriteString("            <contents><![CDATA[")
+			result.WriteString(safeContents)
+			result.WriteString("]]></contents>\n")
+			result.WriteString("        </file>\n")
+	}
+	
+	result.WriteString("    </files>\n")
+	result.WriteString("</root>\n")
+	
+	// Get the output string
+	outputStr := result.String()
+	
+	// Calculate tokens
+	tokenCount := EstimateTokens(outputStr)
+	repo.TotalTokens = tokenCount
+	
+	// Replace the placeholder with the actual token count
+	outputStr = strings.Replace(
+			outputStr, 
+			"<total_tokens>PLACEHOLDER</total_tokens>", 
+			fmt.Sprintf("<total_tokens>%d</total_tokens>", tokenCount), 
+			1,
+	)
+	
+	return outputStr, nil
 }
+
 
 // escapeXML escapes XML special characters in a string
 func escapeXML(s string) string {
-    s = strings.ReplaceAll(s, "&", "&amp;")
-    s = strings.ReplaceAll(s, "<", "&lt;")
-    s = strings.ReplaceAll(s, ">", "&gt;")
-    s = strings.ReplaceAll(s, "\"", "&quot;")
-    s = strings.ReplaceAll(s, "'", "&apos;")
-    return s
+	s = strings.ReplaceAll(s, "&", "&amp;")
+	s = strings.ReplaceAll(s, "<", "&lt;")
+	s = strings.ReplaceAll(s, ">", "&gt;")
+	s = strings.ReplaceAll(s, "\"", "&quot;")
+	s = strings.ReplaceAll(s, "'", "&apos;")
+	return s
 }
 
 // ValidateXML checks if the given XML string is well-formed
