@@ -24,11 +24,46 @@ To use the git2gpt utility, run the following command:
 git2gpt [flags] /path/to/git/repository
 ```
 
-### Ignoring Files
+### Including and Ignoring Files
 
-By default, your `.git` directory and your `.gitignore` files are ignored. Any files in your `.gitignore` are also skipped. If you want to change this behavior, you should add a `.gptignore` file to your repository. The `.gptignore` file should contain a list of files and directories to ignore, one per line. The `.gptignore` file should be in the same directory as your `.gitignore` file. Please note that this overwrites the default ignore list, so you should include the default ignore list in your `.gptignore` file if you want to keep it.
+By default, your `.git` directory and your `.gitignore` files are ignored. Any files in your `.gitignore` are also skipped. You can customize the files to include or ignore in several ways:
 
-### Flags
+### Including Only Specific Files (.gptinclude)
+
+Add a `.gptinclude` file to your repository to specify which files should be included in the output. Each line in the file should contain a glob pattern of files or directories to include. If a `.gptinclude` file is present, only files that match these patterns will be included.
+
+Example `.gptinclude` file:
+```
+# Include only these file types
+*.go
+*.js
+*.html
+*.css
+
+# Include specific directories
+src/**
+docs/api/**
+```
+
+### Ignoring Specific Files (.gptignore)
+
+Add a `.gptignore` file to your repository to specify which files should be ignored. This works similar to `.gitignore`, but is specific to git2gpt. The `.gptignore` file should contain a list of files and directories to ignore, one per line.
+
+Example `.gptignore` file:
+```
+# Ignore these file types
+*.log
+*.tmp
+*.bak
+
+# Ignore specific directories
+node_modules/**
+build/**
+```
+
+**Note**: When both `.gptinclude` and `.gptignore` files exist, git2gpt will first include files matching the `.gptinclude` patterns, and then exclude any of those files that also match `.gptignore` patterns.
+
+## Command Line Options
 
 * `-p`,  `--preamble`: Path to a text file containing a preamble to include at the beginning of the output file.
 * `-o`,  `--output`: Path to the output file. If not specified, will print to standard output.
@@ -36,6 +71,7 @@ By default, your `.git` directory and your `.gitignore` files are ignored. Any f
 * `-j`,  `--json`: Output to JSON rather than plain text. Use with `-o` to specify the output file.
 * `-x`,  `--xml`: Output to XML rather than plain text. Use with `-o` to specify the output file.
 * `-i`,  `--ignore`: Path to the `.gptignore` file. If not specified, will look for a `.gptignore` file in the same directory as the `.gitignore` file.
+* `-I`,  `--include`: Path to the `.gptinclude` file. If not specified, will look for a `.gptinclude` file in the repository root.
 * `-g`,  `--ignore-gitignore`: Ignore the `.gitignore` file.
 * `-s`,  `--scrub-comments`: Remove comments from the output file to save tokens.
 
