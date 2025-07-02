@@ -254,8 +254,24 @@ func processRepository(repoPath string, ignoreList []string, repo *GitRepo) erro
                 if err != nil {
                         return err
                 }
-                // Skip symbolic links to avoid issues with directory symlinks (like Laravel's storage link)
+                // Handle symbolic links by including them as files
                 if info.Mode()&os.ModeSymlink != 0 {
+                        relativeFilePath, _ := filepath.Rel(repoPath, path)
+                        ignore := shouldIgnore(relativeFilePath, ignoreList)
+                        if !ignore {
+                                // Get the target of the symlink
+                                target, err := os.Readlink(path)
+                                if err != nil {
+                                        return err
+                                }
+
+                                // Create a file entry for the symlink itself
+                                var file GitFile
+                                file.Path = relativeFilePath
+                                file.Contents = target // Store the symlink target as the content
+                                file.Tokens = EstimateTokens(file.Contents)
+                                repo.Files = append(repo.Files, file)
+                        }
                         return nil
                 }
                 if !info.IsDir() {

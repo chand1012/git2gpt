@@ -38,10 +38,17 @@ func TestSymlinkHandling(t *testing.T) {
                 t.Fatal("Expected to find storage/test.txt in the repository")
         }
 
-        // Verify that the symlink was skipped
+        // Verify that the symlink was resolved
+        // The symlink itself should be included as a file
+        symlinkFound := false
         for _, file := range repo.Files {
                 if file.Path == filepath.Join("public", "storage") {
-                        t.Fatal("Symlink should have been skipped")
+                        symlinkFound = true
+                        break
                 }
+        }
+
+        if !symlinkFound {
+                t.Fatal("Expected to find public/storage in the repository")
         }
 }
