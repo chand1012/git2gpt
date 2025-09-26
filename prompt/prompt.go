@@ -53,7 +53,15 @@ func getIgnoreList(ignoreFilePath string) ([]string, error) {
 			line = line + "**"
 		}
 		line = strings.TrimPrefix(line, "/")
-		ignoreList = append(ignoreList, line)
+		
+		// Convert simple extension patterns like "*.ext" to match both root and nested files
+		// Add both "*.ext" (for root files) and "**/*.ext" (for nested files)
+		if strings.HasPrefix(line, "*.") && !strings.Contains(line, "/") && !strings.Contains(line, "**") {
+			ignoreList = append(ignoreList, line)        // Keep original for root files
+			ignoreList = append(ignoreList, "**/"+line)  // Add recursive pattern for nested files
+		} else {
+			ignoreList = append(ignoreList, line)
+		}
 	}
 	return ignoreList, scanner.Err()
 }
@@ -76,7 +84,15 @@ func getIncludeList(includeFilePath string) ([]string, error) {
 			line = line + "**"
 		}
 		line = strings.TrimPrefix(line, "/")
-		includeList = append(includeList, line)
+		
+		// Convert simple extension patterns like "*.ext" to match both root and nested files
+		// Add both "*.ext" (for root files) and "**/*.ext" (for nested files)
+		if strings.HasPrefix(line, "*.") && !strings.Contains(line, "/") && !strings.Contains(line, "**") {
+			includeList = append(includeList, line)        // Keep original for root files
+			includeList = append(includeList, "**/"+line)  // Add recursive pattern for nested files
+		} else {
+			includeList = append(includeList, line)
+		}
 	}
 	return includeList, scanner.Err()
 }
